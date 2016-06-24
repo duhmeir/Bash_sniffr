@@ -1,0 +1,143 @@
+#!/bin/bash
+shopt -o -s nounset
+dump=/root/security_class/dump
+function do_pause
+{
+echo "Press enter to continue";
+read select
+}
+
+function packet_look
+{
+clear
+echo "Packet Sniffer --DZ
+==========================================="
+echo "1.ARP"
+echo "2.RARP"
+echo "3.IP"
+echo "4.SYN Flag Set"
+echo "5.ACK Flag Set"
+echo "6.URG Flag Set"
+echo "7.PSH Flag Set"
+echo "8.RST Flag Set"
+echo "9.FIN Flag Set"
+echo "10.ALL ICMP"
+echo "11.ALL UDP"
+echo "12.ALL TCP"
+echo "13.ONLY SYN Flag Set"
+echo "14.ONLY FIN Flag Set"
+echo "15.ONLY RST Flag Set"
+echo "16.PORT 80"
+echo "17.!=ARP !=IP"
+echo "18.ALL DNS"
+echo "19.ALL SMTP"
+echo "20.!=UDP !=TCP !=ICMP"
+echo "21.!=DNS !=WEB !=MAIL"
+echo "22.!=ARP !=IP COUNT"
+echo "23.ICMP REQ"
+echo "24.ICMP REPLY"
+echo "25.!=ICMP REQ !=ICMP REPLY"
+echo "26.ICMP TIMEOUT DURING TRANSIT"
+echo "27.ICMP TIMEOUT DURING REASSEMBLY"
+echo "28.ICMP REDIRECT"
+echo "r).Read Dumps & # of packets"
+echo "q.quit"
+echo "==========================================="
+read select
+case "$select" in
+1) #ARP
+tcpdump -i eth0 'ether[12:2] == 0x0806' -w $dump
+do_pause;;
+2) #RARP
+tcpdump -i eth0 'ether[12:2] == 0x08035' -w $dump
+do_pause;;
+3) #IP
+tcpdump -i eth0 'ether[12:2] == 0x0800' -w $dump
+do_pause;;
+4) #SYN FLAG
+tcpdump -i eth0 'tcp[13]&0x2 == 0x2' -w $dump
+do_pause;;
+5) #ACK FLAG
+tcpdump -i eth0 'tcp[13]&0x10 == 0x10' -w $dump
+do_pause;;
+6) #URG FLAG
+tcpdump -i eth0 'tcp[13]&0x20 == 0x20' -w $dump #does this work?
+do_pause;;
+7) #PSH FLAG
+tcpdump -i eth0 'tcp[13]&0x8 == 0x8' -w $dump
+do_pause;;
+8) #RST FLAG
+tcpdump -i eth0 'tcp[13]&0x4 == 0x4' -w $dump
+do_pause;;
+9) #FIN FLAG
+tcpdump -i eth0 'tcp[13]&0x1 == 0x1' -w $dump
+do_pause;;
+10) #ICMP TRAFFIC
+tcpdump -i eth0 'ip[9] == 1' -w $dump
+do_pause;;
+11) #UDP TRAFFIC
+tcpdump -i eth0 'ip[9] == 17' -w $dump
+do_pause;;
+12) #TCP TRAFFIC
+tcpdump -i eth0 'ip[9] == 6' -w $dump
+do_pause;;
+13) #ONLY SYN
+tcpdump -i eth0 'tcp[13] == 0x2' -w $dump
+do_pause;;
+14) #ONLY FIN
+tcpdump -i eth0 'tcp[13] == 0x1' -w $dump
+do_pause;;
+15) #ONLY RST
+tcpdump -i eth0 'tcp[13] == 0x4' -w $dump
+do_pause;;
+16) #Port 80 50 in HEX
+tcpdump -i eth0 'tcp[3] == 0x50' -w $dump
+do_pause;;
+17) #!=ARP & !=IP
+tcpdump -i eth0 '!ether[12:2] == 0x0806 && !ether[12:2] == 0x0800 && !ether[12:2] == 0x86DD' -w $dump
+do_pause;;
+18) #DNS 35 in HEX
+tcpdump -i eth0 'tcp[3] == 0x35' -w $dump
+do_pause;;
+19) #SMTP 19 in HEX
+tcpdump -i eth0 'tcp[3] == 0x19' -w $dump
+do_pause;;
+20) #!=UDP !=TCP !=ICMP
+tcpdump -i eth0 '!ip[9] == 1 && !ip[9] == 6 && !ip[9] == 17' -w $dump
+do_pause;;
+21) #!=DNS !=WEB !=MAIL
+tcpdump -i eth0 '!tcp[3] == 0x35 && !tcp[3] == 0x50 && !tcp[3] == 0x19' -w $dump
+do_pause;;
+22) #!=ARP & !=IP count
+tcpdump -i eth0 '!ether[12:2] == 0x0806 && !ether[12:2] == 0x0800 && !ether[12:2] == 0x86DD' -w $dump
+do_pause;;
+23) #ICMP REQ
+tcpdump -i eth0 'icmp[0] == 8 && icmp[1] == 0' -w $dump #does this work?
+do_pause;;
+24) #ICMP REPLY
+tcpdump -i eth0 'icmp[0] == 0 && icmp[1] == 0' -w $dump #does this work?
+do_pause;;
+25) #!=ICMP REQ && #!=ICMP REPLY
+tcpdump -i eth0 '!icmp[0] == 0 && !icmp[1] == 0' -w $dump #does this work?
+do_pause;;
+26) #TIMEOUT DURING TRANSIT
+tcpdump -i eth0 'icmp[0] == 11 && icmp[1] == 0' -w $dump #does this work?
+do_pause;;
+27) #TIMEOUT DURING REASSEMBLY
+tcpdump -i eth0 'icmp[0] == 11 && icmp[1] == 1' -w $dump #does this work?
+do_pause;;
+28) #ICMP REDIRECT
+tcpdump -i eth0 'icmp[0] == 5' -w $dump #does this work?
+do_pause;;
+r) #READ DUMP
+tcpdump -r $dump
+echo "# of packets"
+wc -l $dump
+do_pause;;
+q) #QUIT
+echo "exiting.."
+exit
+esac
+packet_look
+}
+packet_look
